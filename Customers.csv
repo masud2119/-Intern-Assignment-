@@ -1,0 +1,41 @@
+# Task 1: Exploratory Data Analysis (EDA) and Business Insights
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load datasets
+customers_df = pd.read_csv("Customers.csv")
+products_df = pd.read_csv("Products.csv")
+transactions_df = pd.read_csv("Transactions.csv")
+
+# Perform EDA
+customer_region_distribution = customers_df['Region'].value_counts()
+merged_data = transactions_df.merge(products_df, on='ProductID')
+revenue_by_category = merged_data.groupby('Category')['TotalValue'].sum()
+average_spend_by_region = (
+    transactions_df.merge(customers_df, on="CustomerID")
+    .groupby('Region')['TotalValue']
+    .mean()
+)
+transactions_df['TransactionDate'] = pd.to_datetime(transactions_df['TransactionDate'])
+transactions_df['MonthYear'] = transactions_df['TransactionDate'].dt.to_period('M')
+monthly_sales = transactions_df.groupby('MonthYear')['TotalValue'].sum()
+
+# Visualizations
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+sns.barplot(x=customer_region_distribution.index, y=customer_region_distribution.values, ax=axes[0, 0])
+axes[0, 0].set_title("Customer Distribution by Region")
+
+sns.barplot(x=revenue_by_category.index, y=revenue_by_category.values, ax=axes[0, 1])
+axes[0, 1].set_title("Revenue by Product Category")
+
+sns.barplot(x=average_spend_by_region.index, y=average_spend_by_region.values, ax=axes[1, 0])
+axes[1, 0].set_title("Average Spend by Region")
+
+axes[1, 1].plot(monthly_sales.index.astype(str), monthly_sales.values, marker="o")
+axes[1, 1].set_title("Monthly Sales Trend")
+axes[1, 1].tick_params(axis='x', rotation=45)
+
+plt.tight_layout()
+plt.show()
